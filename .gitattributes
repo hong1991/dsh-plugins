@@ -1,0 +1,4 @@
+# Keep the checkout byte-stable across platforms: these files are read directly
+# by a running dsh host (the client bundle is served as-is), so the working copy
+# must not be rewritten with CRLF on checkout.
+* text=auto eol=lf

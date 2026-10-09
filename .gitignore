@@ -1,0 +1,8 @@
+# Installed dependencies (a dsh profile installs plugins through pnpm, not here)
+node_modules/
+
+# Local scratch and logs
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
