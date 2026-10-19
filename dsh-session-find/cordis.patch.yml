@@ -1,0 +1,11 @@
+# dsh-session-find — a Ctrl+F style find bar for the current conversation.
+# The bundle carries no Host behavior; the visible surface is the Client half,
+# discovered through the package.json `dsh.client` declaration.
+#
+# The name is relative on purpose: a relative row resolves beside this patch
+# file, which is the package's own directory, so the row works wherever the
+# package is installed. A bare name would have to be resolvable from the dsh
+# installation or the profile instead.
+- insert:
+    - id: session-find
+      name: './lib/index.js'
