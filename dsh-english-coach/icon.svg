@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="English Coach">
+  <rect width="64" height="64" rx="14" fill="#1f6feb"/>
+  <path d="M16.5 47.5 18.9 38 40 16.9a3.6 3.6 0 0 1 5.1 0l2 2a3.6 3.6 0 0 1 0 5.1L26 45.1l-9.5 2.4Z" fill="#ffffff"/>
+  <path d="M37.4 19.5 44.5 26.6" stroke="#1f6feb" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M16 53.5h32" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity=".85"/>
+</svg>

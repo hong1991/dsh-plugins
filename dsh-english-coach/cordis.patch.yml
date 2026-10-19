@@ -1,0 +1,16 @@
+# The dsh-english-coach bundle patch: one Loader row added to whatever profile
+# composed this bundle. The row is simultaneously a host row (the review
+# pipeline, the JSON route, and the commands) and a `dsh.client` row — the
+# modules node half scans enabled entries for that declaration and serves this
+# package's browser bundle under /plugins.
+#
+# The name is relative on purpose: relative names resolve beside this patch
+# file, which is the package's own directory. A bare name would resolve against
+# the dsh installation instead and never find this package.
+#
+# Install this package as a bundle layer OR point a profile patch row at
+# lib/index.js directly — never both: the two rows share one id, and the Loader
+# refuses a duplicate.
+- insert:
+    - id: english-coach
+      name: './lib/index.js'
