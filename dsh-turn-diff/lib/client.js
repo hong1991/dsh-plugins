@@ -57,6 +57,8 @@ window.__ModuleLoader__.load({
 		const TAB_ID = "dsh-turn-diff";
 		/** Wire tool names whose result metadata carries applied hunks. */
 		const MUTATING_TOOLS = new Set(["write", "edit", "str_replace_editor"]);
+		/** Body lines shown per file before `DiffBlock` collapses the middle. */
+		const DIFF_MAX_LINES = 400;
 
 		/** Simplified Chinese dictionary (the key-set source of truth). */
 		const zh = {
@@ -78,6 +80,9 @@ window.__ModuleLoader__.load({
 			"body.partial": "其中 {count} 次改动所在的对话历史尚未加载，无法解析出文件：向上滚动对话加载更早历史后再打开可补全。",
 			copy: "复制",
 			copied: "已复制",
+			codeLabel: "代码",
+			wrapLabel: "自动换行",
+			unwrapLabel: "取消自动换行",
 			collapse: "收起",
 			collapseAria: "收起差异",
 			expand: "… 其余 {count} 行",
@@ -106,6 +111,9 @@ window.__ModuleLoader__.load({
 			"body.partial": "{count} change(s) sit in conversation history that is not loaded, so their files cannot be resolved: scroll the conversation up to load older history, then open this again.",
 			copy: "Copy",
 			copied: "Copied",
+			codeLabel: "Code",
+			wrapLabel: "Wrap lines",
+			unwrapLabel: "Unwrap lines",
 			collapse: "Collapse",
 			collapseAria: "Collapse diff",
 			expand: "… {count} more lines",
@@ -121,8 +129,12 @@ window.__ModuleLoader__.load({
 
 		/**
 		 * Narrow opaque result metadata to well-formed hunks.
+		 *
+		 * A malformed hunk is dropped rather than invalidating its siblings: one
+		 * bad entry should not cost the result its other applied hunks and force
+		 * the coarser call-argument fallback.
 		 * @param meta - the tool result's `meta` field.
-		 * @returns validated hunks, or undefined when the payload is unusable.
+		 * @returns validated hunks, or undefined when the payload has none.
 		 */
 		function diffsFromMeta(meta) {
 			if (meta === null || typeof meta !== "object" || Array.isArray(meta)) return undefined;
@@ -130,11 +142,11 @@ window.__ModuleLoader__.load({
 			if (!Array.isArray(diffs) || diffs.length === 0) return undefined;
 			const out = [];
 			for (const hunk of diffs) {
-				if (hunk === null || typeof hunk !== "object") return undefined;
+				if (hunk === null || typeof hunk !== "object" || Array.isArray(hunk)) continue;
 				const { path, oldText, newText } = hunk;
-				if (typeof path !== "string" || path === "") return undefined;
-				if (oldText !== null && oldText !== undefined && typeof oldText !== "string") return undefined;
-				if (typeof newText !== "string") return undefined;
+				if (typeof path !== "string" || path === "") continue;
+				if (oldText !== null && oldText !== undefined && typeof oldText !== "string") continue;
+				if (typeof newText !== "string") continue;
 				out.push({ path, oldText: oldText === undefined ? null : oldText, newText });
 			}
 			return out.length === 0 ? undefined : out;
@@ -354,9 +366,19 @@ window.__ModuleLoader__.load({
 
 		// ── per-turn aggregation ────────────────────────────────────────────
 
-		/** Per-snapshot aggregation cache: one snapshot's turns, computed at most once. */
+		/**
+		 * Per-turn aggregation cache, keyed by the live snapshot order and the
+		 * turn's node-key array.
+		 *
+		 * The platform keeps both identity-stable across content-only updates
+		 * (`apply` preserves `order`; `MutableChatLocationIndex.touch` clones only
+		 * the changed turn's key array) and rebuilds them on `replace` or a
+		 * structural update. So a snapshot published by an unrelated turn reuses
+		 * every other turn's aggregate, while a re-materialized window cannot
+		 * alias stale data.
+		 */
 		const turnDataCache = new WeakMap();
-		/** Per-snapshot message lookup cache. */
+		/** Per-snapshot message → turn reverse index. */
 		const locateCache = new WeakMap();
 
 		/**
@@ -415,21 +437,26 @@ window.__ModuleLoader__.load({
 		}
 
 		/**
-		 * Read one snapshot's aggregate for a turn, computing it at most once.
+		 * Read one turn's aggregate, computing it at most once per content state.
 		 * @param snapshot - current Chat snapshot.
 		 * @param turn - owning turn number.
 		 * @returns the aggregate.
 		 */
 		function turnDataFor(snapshot, turn) {
-			let byTurn = turnDataCache.get(snapshot);
+			const keys = snapshot.locations?.getTurn(turn);
+			const order = snapshot.order;
+			// An empty or unavailable turn shares a frozen array (or none at all), so
+			// it stays out of the cache: caching it would alias other empty turns.
+			if (!Array.isArray(keys) || keys.length === 0 || !Array.isArray(order)) return collectTurn(snapshot, turn);
+			let byTurn = turnDataCache.get(order);
 			if (byTurn === undefined) {
-				byTurn = new Map();
-				turnDataCache.set(snapshot, byTurn);
+				byTurn = new WeakMap();
+				turnDataCache.set(order, byTurn);
 			}
-			let data = byTurn.get(turn);
+			let data = byTurn.get(keys);
 			if (data === undefined) {
 				data = collectTurn(snapshot, turn);
-				byTurn.set(turn, data);
+				byTurn.set(keys, data);
 			}
 			return data;
 		}
@@ -456,12 +483,39 @@ window.__ModuleLoader__.load({
 		}
 
 		/**
+		 * Build one snapshot's message → turn reverse index.
+		 *
+		 * Every assistant Chat node carries both identities directly — `messageId`
+		 * and a numeric `turn` on its data — so one pass over the materialized
+		 * nodes turns the per-action lookup into a map hit. Scanning per action
+		 * instead is O(messages × nodes) on every publication, which is the
+		 * streaming hot path.
+		 * @param snapshot - current Chat snapshot.
+		 * @returns messageId-keyed turn numbers.
+		 */
+		function turnIndexFor(snapshot) {
+			let index = locateCache.get(snapshot);
+			if (index !== undefined) return index;
+			index = new Map();
+			const store = snapshot.nodes;
+			if (store !== undefined && typeof store.values === "function") {
+				for (const node of store.values()) {
+					if (node.kind !== "assistant") continue;
+					const data = node.data;
+					if (data === undefined || data === null) continue;
+					if (typeof data.messageId !== "string" || typeof data.turn !== "number") continue;
+					if (!index.has(data.messageId)) index.set(data.messageId, data.turn);
+				}
+			}
+			locateCache.set(snapshot, index);
+			return index;
+		}
+
+		/**
 		 * Resolve the turn an assistant message belongs to.
 		 *
-		 * The assistant Chat node carries both identities directly — `messageId`
-		 * and a numeric `turn` on its data — so this is a lookup, not a
-		 * re-derivation. The durable node projection is only a fallback for a
-		 * window that materialized no Chat node for the message.
+		 * The durable node projection is only a fallback for a window that
+		 * materialized no Chat node for the message.
 		 *
 		 * Nothing here re-derives "closing": the `assistant-actions` strip is
 		 * rendered by the turn tail under a turn's closing assistant only, so
@@ -472,15 +526,8 @@ window.__ModuleLoader__.load({
 		 */
 		function locateTurn(snapshot, messageId) {
 			if (typeof messageId !== "string") return null;
-			const store = snapshot.nodes;
-			if (store !== undefined && typeof store.values === "function") {
-				for (const node of store.values()) {
-					if (node.kind !== "assistant") continue;
-					const data = node.data;
-					if (data === undefined || data === null || data.messageId !== messageId) continue;
-					if (typeof data.turn === "number") return data.turn;
-				}
-			}
+			const turn = turnIndexFor(snapshot).get(messageId);
+			if (turn !== undefined) return turn;
 			const nodes = snapshot.legacy?.nodes;
 			if (Array.isArray(nodes)) {
 				for (const node of nodes) {
@@ -489,25 +536,6 @@ window.__ModuleLoader__.load({
 				}
 			}
 			return null;
-		}
-
-		/**
-		 * Read a message's turn, memoized per snapshot.
-		 * @param snapshot - current Chat snapshot.
-		 * @param messageId - the message this action belongs to.
-		 * @returns the turn number, or null.
-		 */
-		function turnOfMessage(snapshot, messageId) {
-			let byMessage = locateCache.get(snapshot);
-			if (byMessage === undefined) {
-				byMessage = new Map();
-				locateCache.set(snapshot, byMessage);
-			}
-			const key = typeof messageId === "string" ? messageId : "";
-			if (byMessage.has(key)) return byMessage.get(key);
-			const turn = locateTurn(snapshot, messageId);
-			byMessage.set(key, turn);
-			return turn;
 		}
 
 		/**
@@ -532,13 +560,13 @@ window.__ModuleLoader__.load({
 		 * A React store selector must return something reference-stable between
 		 * publications, and a fresh aggregate object never is — so this returns a
 		 * string that both identifies the data (turn, content hash) and carries
-		 * the label's numbers. The aggregate itself stays in the per-snapshot cache.
+		 * the label's numbers. The aggregate itself stays in the per-turn cache.
 		 * @param snapshot - current Chat snapshot.
 		 * @param messageId - the message this action belongs to.
 		 * @returns a stable signature, or null when this turn changed nothing.
 		 */
 		function signatureOf(snapshot, messageId) {
-			const turn = turnOfMessage(snapshot, messageId);
+			const turn = locateTurn(snapshot, messageId);
 			if (turn === null) return null;
 			const data = turnDataFor(snapshot, turn);
 			if (data.files.length === 0) return null;
@@ -747,7 +775,13 @@ window.__ModuleLoader__.load({
 				collapseAria: t("collapseAria"),
 				expand: (count) => t("expand", { count }),
 				expandAria: (count) => t("expandAria", { count }),
-				files: (count) => t(count === 1 ? "files.one" : "files.other", { count })
+				files: (count) => t(count === 1 ? "files.one" : "files.other", { count }),
+				// `DiffBlockLabels extends CodeToolbarLabels`: without these the
+				// toolbar's language fallback renders empty and the wrap control
+				// has neither a tooltip nor an accessible name.
+				codeLabel: t("codeLabel"),
+				wrapLabel: t("wrapLabel"),
+				unwrapLabel: t("unwrapLabel")
 			};
 		}
 
@@ -768,10 +802,15 @@ window.__ModuleLoader__.load({
 		 * @returns the button, or null.
 		 */
 		function TurnDiffActionSubscribed({ messageId, useChat, openDiff, coverWindow, t }) {
-			const signature = useChat((snapshot) => signatureOf(snapshot, messageId));
-			const snapshot = useChat((current) => current);
-			const snapshotRef = react.useRef(snapshot);
-			snapshotRef.current = snapshot;
+			// One subscription, plus a ref carrying the latest snapshot for the
+			// click. A second `useChat((current) => current)` would return a new
+			// object on every publication and re-render every action button on
+			// every streaming frame.
+			const snapshotRef = react.useRef(null);
+			const signature = useChat((snapshot) => {
+				snapshotRef.current = snapshot;
+				return signatureOf(snapshot, messageId);
+			});
 			const [busy, setBusy] = react.useState(false);
 			if (typeof signature !== "string") return null;
 			const summary = summaryOf(signature);
@@ -782,7 +821,9 @@ window.__ModuleLoader__.load({
 					// A long turn's earliest calls can sit outside the loaded window;
 					// page them in before aggregating, or the page under-reports.
 					if (typeof coverWindow === "function") await coverWindow(summary.turn, () => snapshotRef.current);
-					const data = turnDataFor(snapshotRef.current ?? snapshot, summary.turn);
+					const latest = snapshotRef.current;
+					if (latest === null) return;
+					const data = turnDataFor(latest, summary.turn);
 					if (data.files.length === 0) return;
 					openDiff(data);
 				} finally {
@@ -891,7 +932,7 @@ window.__ModuleLoader__.load({
 							key: "diff",
 							diffs: file.diffs,
 							labels,
-							maxLines: Infinity,
+							maxLines: DIFF_MAX_LINES,
 							className: css.diff
 						})
 					]);
@@ -920,6 +961,7 @@ window.__ModuleLoader__.load({
 				kind: KIND,
 				title: () => t("tab.title"),
 				guide: [{
+					id: KIND,
 					order: 60,
 					title: () => t("guide.title"),
 					description: () => t("guide.description")

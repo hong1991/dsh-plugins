@@ -21,7 +21,9 @@ turn.
   as a scannable list rather than a wall of hunks. A turn that changed exactly
   one file opens it, since one click to reveal the only section would be pure
   ceremony. A `全部展开 / 全部收起` control in the header flips them together;
-  opening another turn remounts the page and starts collapsed again.
+  opening another turn remounts the page and starts collapsed again. A single
+  file's body is capped at 400 lines, so a huge `write` folds its middle behind
+  the shipped expand control instead of mounting thousands of rows.
 - It is also reachable from the right Sidebar's guide entries; opened that way
   (no selection carried over) it explains how to open it from the conversation.
 
