@@ -1,0 +1,13 @@
+# dsh-refresh — one-click page refresh that keeps the current conversation.
+#
+# The bundle carries two halves. The Node half publishes the live client-plugin
+# graph on a small read-only route (used by the Shift+click hot refresh); the
+# browser half is discovered through the package.json `dsh.client` declaration.
+#
+# The name is relative on purpose: a relative row resolves beside this patch
+# file, which is the package's own directory, so the row works wherever the
+# package is installed. A bare name would have to be resolvable from the dsh
+# installation or the profile instead.
+- insert:
+    - id: ui-refresh
+      name: './lib/index.js'
