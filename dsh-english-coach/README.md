@@ -21,6 +21,13 @@ appears:
 Expand it for the individual fixes and a one-sentence explanation each. Dismiss
 a review you do not want to see; open the notebook from the same row.
 
+The strip always describes the **newest prompt**: it is labelled `你的上一条：`
+and shows the original sentence when expanded. Once a newer message exists, the
+previous receipt is withheld — it stays in the notebook rather than sitting
+under a newer answer. Runtime context, skill catalogs, time stamps, and approval
+notices are user-role messages too, but their `source.kind` is not `user`, so the
+coach never reviews them.
+
 **A coach page in the sidebar.** The pencil icon opens four tabs:
 
 - **Overview** — reviews, issues, issues per 100 words, word count, issue

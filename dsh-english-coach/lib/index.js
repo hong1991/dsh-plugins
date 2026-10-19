@@ -895,19 +895,43 @@ export function apply(ctx, config = {}) {
 	}
 
 	/**
+	 * Time of the newest prompt the person actually typed in one session.
+	 * Runtime context, skill catalogs, notices, and approvals are user-role
+	 * messages too, so only the plain `user` source counts here.
+	 * @param sessionId - live session id.
+	 * @returns epoch milliseconds, or 0 when none is known.
+	 */
+	function lastUserMessageTime(sessionId) {
+		const agent = sessionId.length > 0 ? ctx.get("agents")?.get?.(sessionId) : undefined;
+		const events = agent?.session?.ownEvents?.() ?? [];
+		for (let index = events.length - 1; index >= 0; index--) {
+			const event = events[index];
+			if (event?.type === "user/message" && event.data?.source?.kind === "user") return event.time;
+		}
+		return 0;
+	}
+
+	/**
 	 * The dock's small state payload.
 	 * @param sessionId - active session.
-	 * @returns enabled flags, pending flag, and the latest review.
+	 * @returns enabled flags, pending flag, and the latest review for the last
+	 *   prompt; a review older than that prompt is withheld so a stale receipt
+	 *   never sits under a newer answer.
 	 */
 	function statePayload(sessionId) {
 		const reviews = Object.values(state.reviews);
+		const latest = latestReview(sessionId);
+		const lastUserAt = lastUserMessageTime(sessionId);
+		const stale = latest !== null && lastUserAt > 0 && (latest.at ?? 0) < lastUserAt;
 		return {
 			ok: true,
 			enabled: prefs.enabled,
 			quiet: prefs.quiet,
 			showClean: prefs.showClean,
 			pending: sessionId.length > 0 && pending.has(sessionId),
-			latest: latestReview(sessionId),
+			latest: stale ? null : latest,
+			stale,
+			lastUserAt,
 			counts: {
 				reviews: reviews.length,
 				words: Object.keys(state.words).length,

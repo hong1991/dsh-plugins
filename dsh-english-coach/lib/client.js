@@ -131,6 +131,7 @@ window.__ModuleLoader__.load({
 			"settings.dataPath": "数据保存在本机",
 			"settings.privacy": "批改时，消息文本会发送给你配置的模型提供商。所有记录只保存在本机。",
 			"dock.checking": "正在检查表达…",
+			"dock.scope": "你的上一条：",
 			"dock.issues": "{count} 处可改进",
 			"dock.clean": "表达正确",
 			"dock.expand": "展开",
@@ -228,6 +229,7 @@ window.__ModuleLoader__.load({
 			"settings.dataPath": "Data is stored locally at",
 			"settings.privacy": "Reviews send the message text to your configured model provider. All records stay on this machine.",
 			"dock.checking": "Checking your wording…",
+			"dock.scope": "Your last message:",
 			"dock.issues": "{count} issues",
 			"dock.clean": "Looks correct",
 			"dock.expand": "Show",
@@ -345,6 +347,8 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_dockRow{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 10px}
 .dshEnglishCoach_dockIcon{display:inline-flex;flex:none;color:var(--dsw-alias-brand-primary)}
 .dshEnglishCoach_dockSummary{font-size:12px}
+.dshEnglishCoach_dockScope{flex:none;color:var(--dsw-alias-label-secondary);font-size:11px}
+.dshEnglishCoach_dockOriginal{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:11px;padding-bottom:2px}
 .dshEnglishCoach_dockCats{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:12px}
 .dshEnglishCoach_dockSpacer{flex:1}
 .dshEnglishCoach_dockButton{flex:none;height:22px;padding:0 7px;border:none;border-radius:5px;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;font:inherit;font-size:11px}
@@ -1139,6 +1143,7 @@ window.__ModuleLoader__.load({
 						"div",
 						{ className: "dshEnglishCoach_dockRow" },
 						h("span", { className: "dshEnglishCoach_dockIcon" }, issues.length > 0 ? h(CoachIcon, { size: 14 }) : h(CheckIcon)),
+						h("span", { className: "dshEnglishCoach_dockScope" }, t("dock.scope")),
 						h("span", { className: "dshEnglishCoach_dockSummary" }, issues.length > 0 ? t("dock.issues", { count: issues.length }) : t("dock.clean")),
 						categories !== "" ? h("span", { className: "dshEnglishCoach_dockCats" }, categories) : null,
 						h("span", { className: "dshEnglishCoach_dockSpacer" }),
@@ -1156,6 +1161,7 @@ window.__ModuleLoader__.load({
 						? h(
 								"div",
 								{ className: "dshEnglishCoach_dockBody" },
+								h("div", { className: "dshEnglishCoach_dockOriginal", title: review.text }, review.text),
 								issues.map((issue, index) =>
 									h(
 										"div",
