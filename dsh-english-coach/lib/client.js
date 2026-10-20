@@ -75,6 +75,8 @@ window.__ModuleLoader__.load({
 			"overview.density": "每百词问题",
 			"overview.words": "累计词数",
 			"overview.byCategory": "问题分布",
+			"overview.patterns": "反复出现",
+			"overview.patternTimes": "{count} 次",
 			"overview.trend": "近 8 周趋势",
 			"overview.recent": "最近的批改",
 			"overview.empty": "还没有记录。用英文发一条消息，批改会自动开始。",
@@ -92,13 +94,22 @@ window.__ModuleLoader__.load({
 			"notebook.master": "已掌握",
 			"notebook.dismiss": "忽略",
 			"notebook.issueCount": "{count} 处",
+			"notebook.issueCountOne": "1 处",
 			"notebook.limit": "只显示最近 100 条；更多请用导出。",
+			"explain.open": "双语对照",
+			"explain.close": "收起对照",
+			"explain.loading": "正在生成双语对照…",
+			"explain.original": "原文",
+			"explain.corrected": "修正",
+			"explain.rule": "规则：",
+			"explain.source": "翻译由 {model} 生成",
 			"words.title": "查词",
 			"words.placeholder": "输入单词或短语，例如 ubiquitous",
 			"words.button": "查询",
 			"words.searching": "查询中…",
 			"words.notFound": "没查到「{term}」",
 			"words.save": "加入生词本",
+			"words.lookUp": "查词",
 			"words.saved": "已加入生词本",
 			"words.remove": "移出生词本",
 			"words.savedTitle": "生词本",
@@ -132,6 +143,7 @@ window.__ModuleLoader__.load({
 			"settings.privacy": "批改时，消息文本会发送给你配置的模型提供商。所有记录只保存在本机。",
 			"dock.checking": "正在检查表达…",
 			"dock.scope": "你的上一条：",
+			"dock.issueOne": "1 处可改进",
 			"dock.issues": "{count} 处可改进",
 			"dock.clean": "表达正确",
 			"dock.expand": "展开",
@@ -173,6 +185,8 @@ window.__ModuleLoader__.load({
 			"overview.density": "Issues / 100 words",
 			"overview.words": "Words",
 			"overview.byCategory": "Issue distribution",
+			"overview.patterns": "Recurring patterns",
+			"overview.patternTimes": "{count}×",
 			"overview.trend": "Last 8 weeks",
 			"overview.recent": "Recent reviews",
 			"overview.empty": "No reviews yet. Send a message in English and the coach will start.",
@@ -190,13 +204,22 @@ window.__ModuleLoader__.load({
 			"notebook.master": "Mastered",
 			"notebook.dismiss": "Dismiss",
 			"notebook.issueCount": "{count} issues",
+			"notebook.issueCountOne": "1 issue",
 			"notebook.limit": "Showing the latest 100; export for more.",
+			"explain.open": "Bilingual view",
+			"explain.close": "Hide bilingual view",
+			"explain.loading": "Building the bilingual view…",
+			"explain.original": "Original",
+			"explain.corrected": "Corrected",
+			"explain.rule": "Rule: ",
+			"explain.source": "Translation by {model}",
 			"words.title": "Dictionary",
 			"words.placeholder": "Type a word or phrase, e.g. ubiquitous",
 			"words.button": "Look up",
 			"words.searching": "Looking up…",
 			"words.notFound": "No entry for “{term}”",
 			"words.save": "Add to wordbook",
+			"words.lookUp": "Look up",
 			"words.saved": "In wordbook",
 			"words.remove": "Remove from wordbook",
 			"words.savedTitle": "Wordbook",
@@ -230,6 +253,7 @@ window.__ModuleLoader__.load({
 			"settings.privacy": "Reviews send the message text to your configured model provider. All records stay on this machine.",
 			"dock.checking": "Checking your wording…",
 			"dock.scope": "Your last message:",
+			"dock.issueOne": "1 issue",
 			"dock.issues": "{count} issues",
 			"dock.clean": "Looks correct",
 			"dock.expand": "Show",
@@ -253,8 +277,9 @@ window.__ModuleLoader__.load({
 		};
 
 		const stylesheet = `
-.dshEnglishCoach_page{width:100%;min-width:0;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:14px;line-height:1.6}
-.dshEnglishCoach_header{flex:none;display:flex;align-items:flex-end;gap:24px;padding:18px 24px 0;border-bottom:1px solid var(--dsw-alias-border-l1)}
+.dshEnglishCoach_page{--dsh-coach-content-width:var(--dsh-chat-user-width,clamp(680px,calc(var(--dsh-conversation-column-width,0px) * .64),920px));width:100%;min-width:0;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:14px;line-height:1.6}
+.dshEnglishCoach_header{flex:none;padding:18px 24px 0;border-bottom:1px solid var(--dsw-alias-border-l1)}
+.dshEnglishCoach_headerInner{display:flex;align-items:flex-end;gap:24px;width:100%;max-width:var(--dsh-coach-content-width);margin:0 auto}
 .dshEnglishCoach_heading{flex:1;min-width:0;padding-bottom:10px}
 .dshEnglishCoach_title{font-size:18px;font-weight:600;line-height:1.3}
 .dshEnglishCoach_subtitle{margin-top:2px;color:var(--dsw-alias-label-secondary);font-size:12px}
@@ -263,7 +288,8 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_tab:hover{color:var(--dsw-alias-label-primary)}
 .dshEnglishCoach_tabActive{color:var(--dsw-alias-label-primary);border-bottom-color:var(--dsw-alias-brand-primary)}
 .dshEnglishCoach_body{flex:1;min-height:0;overflow:auto;padding:20px 24px 48px}
-.dshEnglishCoach_stack{display:flex;flex-direction:column;gap:24px;max-width:900px}
+.dshEnglishCoach_column{width:100%;max-width:var(--dsh-coach-content-width);margin:0 auto}
+.dshEnglishCoach_stack{display:flex;flex-direction:column;gap:24px}
 .dshEnglishCoach_stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .dshEnglishCoach_stat{padding:12px 14px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1)}
 .dshEnglishCoach_statValue{font-size:22px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
@@ -277,6 +303,9 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_barFill{display:block;height:100%;border-radius:999px;background:var(--dsw-alias-brand-primary)}
 .dshEnglishCoach_barValue{text-align:right;color:var(--dsw-alias-label-secondary);font-size:12px;font-variant-numeric:tabular-nums}
 .dshEnglishCoach_weeks{display:flex;align-items:flex-end;gap:6px;height:96px;padding:6px 2px 0;border-bottom:1px solid var(--dsw-alias-border-l1)}
+.dshEnglishCoach_patterns{display:flex;flex-direction:column;gap:6px}
+.dshEnglishCoach_pattern{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.dshEnglishCoach_patternCount{margin-left:auto;color:var(--dsw-alias-label-secondary);font-size:11px}
 .dshEnglishCoach_week{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
 .dshEnglishCoach_weekBar{width:100%;max-width:28px;border-radius:4px 4px 0 0;background:var(--dsw-alias-brand-primary);opacity:.75}
 .dshEnglishCoach_weekLabel{color:var(--dsw-alias-label-secondary);font-size:10px;white-space:nowrap}
@@ -284,8 +313,24 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_review{padding:12px 14px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1);display:flex;flex-direction:column;gap:8px}
 .dshEnglishCoach_reviewMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--dsw-alias-label-secondary);font-size:11px}
 .dshEnglishCoach_original{white-space:pre-wrap;word-break:break-word}
+.dshEnglishCoach_word{display:inline;padding:0 1px;border:none;border-radius:3px;background:transparent;color:inherit;font:inherit;cursor:pointer;text-decoration:underline dotted var(--dsw-alias-border-l2);text-underline-offset:2px}
+.dshEnglishCoach_word:hover{background:var(--dsw-alias-bg-layer-2);text-decoration-color:var(--dsw-alias-brand-primary)}
 .dshEnglishCoach_corrected{padding:6px 10px;border-left:2px solid var(--dsw-alias-state-success-primary);background:var(--dsw-alias-bg-layer-2);border-radius:0 6px 6px 0;white-space:pre-wrap;word-break:break-word}
 .dshEnglishCoach_correctedLabel{display:block;margin-bottom:1px;color:var(--dsw-alias-label-secondary);font-size:11px}
+.dshEnglishCoach_reviewActions{display:flex;align-items:center;gap:10px;padding-top:2px}
+.dshEnglishCoach_explain{display:flex;flex-direction:column;gap:10px;padding:10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-base)}
+.dshEnglishCoach_panes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.dshEnglishCoach_pane{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dshEnglishCoach_paneLabel{color:var(--dsw-alias-label-secondary);font-size:11px}
+.dshEnglishCoach_paneText{white-space:pre-wrap;word-break:break-word;font-size:13px}
+.dshEnglishCoach_paneTranslation{padding:6px 8px;border-radius:6px;background:var(--dsw-alias-bg-layer-2);font-size:13px;white-space:pre-wrap;word-break:break-word}
+.dshEnglishCoach_wordChips{display:flex;flex-wrap:wrap;gap:4px}
+.dshEnglishCoach_wordChip{padding:0 6px;border:1px solid var(--dsw-alias-border-l1);border-radius:999px;background:transparent;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px}
+.dshEnglishCoach_wordChip b{color:var(--dsw-alias-label-primary);font-weight:500}
+.dshEnglishCoach_wordChipButton{cursor:pointer;font:inherit;font-size:11px}
+.dshEnglishCoach_wordChipButton:hover{background:var(--dsw-alias-bg-layer-2)}
+.dshEnglishCoach_explainSource{color:var(--dsw-alias-label-secondary);font-size:10px}
+.dshEnglishCoach_rule{flex:1 1 100%;padding-left:6px;border-left:2px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:12px}
 .dshEnglishCoach_issues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .dshEnglishCoach_issue{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:6px 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-base)}
 .dshEnglishCoach_chip{flex:none;padding:0 6px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:11px;line-height:18px}
@@ -296,7 +341,7 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_actions{flex:1 1 100%;display:flex;gap:8px}
 .dshEnglishCoach_link{padding:0;border:none;background:transparent;color:var(--dsw-alias-label-secondary);cursor:pointer;font:inherit;font-size:11px;text-decoration:underline;text-underline-offset:2px}
 .dshEnglishCoach_link:hover{color:var(--dsw-alias-label-primary)}
-.dshEnglishCoach_filters{display:flex;gap:8px;margin-bottom:10px}
+.dshEnglishCoach_filters{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .dshEnglishCoach_input{flex:1;min-width:0;height:30px;padding:0 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;outline:none}
 .dshEnglishCoach_input:focus{border-color:var(--dsw-alias-brand-primary)}
 .dshEnglishCoach_button{flex:none;height:30px;padding:0 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);cursor:pointer;font:inherit;font-size:13px}
@@ -327,6 +372,8 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_savedList{display:flex;flex-direction:column;gap:6px}
 .dshEnglishCoach_savedItem{display:flex;align-items:baseline;gap:8px;padding:7px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-layer-1)}
 .dshEnglishCoach_savedTerm{font-weight:500}
+.dshEnglishCoach_savedTermButton{padding:0;border:none;background:transparent;color:inherit;font:inherit;font-weight:500;cursor:pointer}
+.dshEnglishCoach_savedTermButton:hover{text-decoration:underline}
 .dshEnglishCoach_savedZh{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:12px}
 .dshEnglishCoach_settings{display:flex;flex-direction:column;gap:18px;max-width:620px}
 .dshEnglishCoach_field{display:flex;flex-direction:column;gap:5px}
@@ -342,7 +389,7 @@ window.__ModuleLoader__.load({
 .dshEnglishCoach_exportLink:hover{background:var(--dsw-alias-bg-layer-2)}
 .dshEnglishCoach_code{display:block;margin-top:4px;padding:8px 10px;border-radius:7px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-family:var(--dsw-font-mono,monospace);font-size:11px;word-break:break-all}
 .dshEnglishCoach_privacy{color:var(--dsw-alias-label-secondary);font-size:12px}
-.dshEnglishCoach_dock{margin:0 12px 8px}
+.dshEnglishCoach_dock{box-sizing:border-box;width:calc(100% - var(--dsh-composer-side-clearance,16px) - var(--dsh-composer-side-clearance,16px));max-width:var(--dsh-composer-card-max-width,952px);margin:0 auto 8px}
 .dshEnglishCoach_dockCard{border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1);overflow:hidden}
 .dshEnglishCoach_dockRow{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 10px}
 .dshEnglishCoach_dockIcon{display:inline-flex;flex:none;color:var(--dsw-alias-brand-primary)}
@@ -393,6 +440,60 @@ window.__ModuleLoader__.load({
 			});
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);
 			return response.json();
+		}
+
+		// ── panel intent ────────────────────────────────────────────────────
+
+		/**
+		 * Cross-surface panel intent: which tab to show and, optionally, which
+		 * term to look up. The dock and the page are separate slot entries, so
+		 * they hand the intent through this small bus; the page consumes and
+		 * clears it, which also makes a direct entry land on the right tab.
+		 */
+		const panelBus = { tab: "", term: "", nonce: 0, listeners: new Set() };
+
+		/** Wake every mounted consumer of the bus. */
+		function notifyPanel() {
+			panelBus.nonce += 1;
+			for (const listener of [...panelBus.listeners]) listener();
+		}
+
+		/**
+		 * Ask the coach page to look up one term.
+		 * @param term - word or phrase.
+		 */
+		function requestLookup(term) {
+			const value = String(term ?? "").trim();
+			if (value.length === 0) return;
+			panelBus.tab = "words";
+			panelBus.term = value;
+			notifyPanel();
+		}
+
+		/**
+		 * Ask the coach page to open one tab.
+		 * @param tab - `overview`, `notebook`, `words`, or `settings`.
+		 */
+		function requestTab(tab) {
+			panelBus.tab = tab;
+			panelBus.term = "";
+			notifyPanel();
+		}
+
+		/**
+		 * Subscribe the calling component to panel intents.
+		 * @returns the shared bus (its `tab`, `term`, and `nonce` change on a request).
+		 */
+		function usePanelBus() {
+			const [, setVersion] = useState(0);
+			useEffect(() => {
+				const listener = () => setVersion((value) => value + 1);
+				panelBus.listeners.add(listener);
+				return () => {
+					panelBus.listeners.delete(listener);
+				};
+			}, []);
+			return panelBus;
 		}
 
 		/**
@@ -480,6 +581,35 @@ window.__ModuleLoader__.load({
 		// ── shared views ────────────────────────────────────────────────────
 
 		/**
+		 * Text whose English words are clickable lookup targets.
+		 * @param props - text, lookup callback, and optional class name.
+		 * @returns the rendered text.
+		 */
+		function WordText({ text, onLookup, className }) {
+			const value = typeof text === "string" ? text : "";
+			if (typeof onLookup !== "function") return h("span", { className }, value);
+			const parts = value.split(/([A-Za-z][A-Za-z'’-]*)/g);
+			return h(
+				"span",
+				{ className },
+				parts.map((part, index) =>
+					/^[A-Za-z]/.test(part)
+						? h(
+								"button",
+								{
+									key: index,
+									type: "button",
+									className: "dshEnglishCoach_word",
+									onClick: () => onLookup(part),
+								},
+								part,
+							)
+						: part,
+				),
+			);
+		}
+
+		/**
 		 * Loading placeholder.
 		 * @param props - translate.
 		 * @returns the line.
@@ -505,10 +635,10 @@ window.__ModuleLoader__.load({
 
 		/**
 		 * One issue row in a review card.
-		 * @param props - translate, review, issue, index, compact, changed callback.
+		 * @param props - translate, review, issue, index, compact, changed callback, rule.
 		 * @returns the row.
 		 */
-		function IssueRow({ t, review, issue, index, compact, onChanged }) {
+		function IssueRow({ t, review, issue, index, compact, onChanged, rule }) {
 			const [busy, setBusy] = useState(false);
 			const act = async (action) => {
 				if (busy) return;
@@ -530,6 +660,7 @@ window.__ModuleLoader__.load({
 				h("span", { className: "dshEnglishCoach_arrow" }, "→"),
 				h("span", { className: "dshEnglishCoach_after" }, issue.after),
 				issue.note ? h("span", { className: "dshEnglishCoach_note" }, issue.note) : null,
+				rule ? h("span", { className: "dshEnglishCoach_rule" }, h("b", {}, t("explain.rule")), rule) : null,
 				compact
 					? null
 					: h(
@@ -544,13 +675,99 @@ window.__ModuleLoader__.load({
 		}
 
 		/**
+		 * The bilingual view: original and corrected sentences side by side with
+		 * their translations, plus a clickable gloss for each content word.
+		 * @param props - translate, review, read state, retry, lookup callback.
+		 * @returns the block.
+		 */
+		function ExplainBlock({ t, review, state, onRetry, onLookup }) {
+			if (state.status === "idle" || state.status === "loading") {
+				return h("div", { className: "dshEnglishCoach_explain" }, t("explain.loading"));
+			}
+			if (state.status === "error") {
+				return h("div", { className: "dshEnglishCoach_explain" }, h(ErrorBox, { t, error: state.error, onRetry }));
+			}
+			const data = state.data;
+			const corrected =
+				typeof review.corrected === "string" && review.corrected.length > 0 && review.corrected !== review.text
+					? review.corrected
+					: "";
+			const pane = (label, text, translation, words) =>
+				h(
+					"div",
+					{ className: "dshEnglishCoach_pane" },
+					h("div", { className: "dshEnglishCoach_paneLabel" }, label),
+					h("div", { className: "dshEnglishCoach_paneText" }, text),
+					h("div", { className: "dshEnglishCoach_paneTranslation" }, translation),
+					(words ?? []).length > 0
+						? h(
+								"div",
+								{ className: "dshEnglishCoach_wordChips" },
+								(words ?? []).map((word, index) => {
+									const latin = /^[A-Za-z]/.test(word.term);
+									const content = [h("b", { key: "term" }, word.term), " ", word.zh];
+									return latin && typeof onLookup === "function"
+										? h(
+												"button",
+												{
+													key: index,
+													type: "button",
+													className: "dshEnglishCoach_wordChip dshEnglishCoach_wordChipButton",
+													onClick: () => onLookup(word.term),
+												},
+												content,
+											)
+										: h("span", { key: index, className: "dshEnglishCoach_wordChip" }, content);
+								}),
+							)
+						: null,
+				);
+			return h(
+				"div",
+				{ className: "dshEnglishCoach_explain" },
+				h(
+					"div",
+					{ className: "dshEnglishCoach_panes" },
+					pane(t("explain.original"), review.text, data.translation, data.words),
+					corrected !== ""
+						? pane(
+								t("explain.corrected"),
+								corrected,
+								data.correctedTranslation ?? data.translation,
+								data.correctedWords,
+							)
+						: null,
+				),
+				h("div", { className: "dshEnglishCoach_explainSource" }, t("explain.source", { model: data.model ?? "" })),
+			);
+		}
+
+		/**
 		 * One reviewed message.
-		 * @param props - translate, review, compact, changed callback.
+		 * @param props - translate, review, compact, changed callback, lookup callback.
 		 * @returns the card.
 		 */
-		function ReviewCard({ t, review, compact, onChanged }) {
+		function ReviewCard({ t, review, compact, onChanged, onLookup }) {
 			const issues = (review.issues ?? []).filter((issue) => issue?.dismissed !== true);
 			const corrected = typeof review.corrected === "string" && review.corrected.length > 0 && review.corrected !== review.text;
+			const [explain, setExplain] = useState({ status: "idle" });
+			const [openExplain, setOpenExplain] = useState(false);
+			const rules = explain.status === "ready" ? explain.data.rules ?? [] : [];
+			const ruleFor = (index) => rules.find((rule) => rule.index === index)?.text;
+			const loadExplain = async () => {
+				setExplain({ status: "loading" });
+				try {
+					const data = await apiPost("explain", { reviewId: review.id });
+					setExplain({ status: "ready", data: data.explain });
+				} catch (error) {
+					setExplain({ status: "error", error });
+				}
+			};
+			const toggleExplain = () => {
+				const next = !openExplain;
+				setOpenExplain(next);
+				if (next && explain.status !== "ready" && explain.status !== "loading") loadExplain();
+			};
 			return h(
 				"article",
 				{ className: "dshEnglishCoach_review" },
@@ -559,10 +776,17 @@ window.__ModuleLoader__.load({
 					{ className: "dshEnglishCoach_reviewMeta" },
 					h("span", {}, formatDay(t, review.at)),
 					h("span", {}, t("notebook.session", { id: String(review.sessionId ?? "").slice(-6) })),
-					h("span", {}, t("notebook.issueCount", { count: issues.length })),
+					h("span", {}, issues.length === 1 ? t("notebook.issueCountOne") : t("notebook.issueCount", { count: issues.length })),
 				),
-				h("div", { className: "dshEnglishCoach_original" }, review.text),
-				corrected ? h("div", { className: "dshEnglishCoach_corrected" }, h("span", { className: "dshEnglishCoach_correctedLabel" }, t("notebook.corrected")), review.corrected) : null,
+				h("div", { className: "dshEnglishCoach_original" }, h(WordText, { text: review.text, onLookup })),
+				corrected
+					? h(
+							"div",
+							{ className: "dshEnglishCoach_corrected" },
+							h("span", { className: "dshEnglishCoach_correctedLabel" }, t("notebook.corrected")),
+							h(WordText, { text: review.corrected, onLookup }),
+						)
+					: null,
 				issues.length > 0
 					? h(
 							"ul",
@@ -570,9 +794,19 @@ window.__ModuleLoader__.load({
 							(review.issues ?? []).map((issue, index) =>
 								issue?.dismissed === true
 									? null
-									: h(IssueRow, { key: index, t, review, issue, index, compact, onChanged }),
+									: h(IssueRow, { key: index, t, review, issue, index, compact, onChanged, rule: ruleFor(index) }),
 							),
 						)
+					: null,
+				compact
+					? null
+					: h(
+							"div",
+							{ className: "dshEnglishCoach_reviewActions" },
+							h("button", { type: "button", className: "dshEnglishCoach_link", onClick: toggleExplain }, t(openExplain ? "explain.close" : "explain.open")),
+						),
+				openExplain && compact !== true
+					? h(ExplainBlock, { t, review, state: explain, onRetry: loadExplain, onLookup })
 					: null,
 			);
 		}
@@ -610,6 +844,7 @@ window.__ModuleLoader__.load({
 			const maxCategory = Math.max(1, ...categories.map((entry) => entry.count));
 			const weekly = data.weekly ?? [];
 			const maxDensity = Math.max(1, ...weekly.map((week) => week.density));
+			const patterns = data.topPatterns ?? [];
 			return h(
 				"div",
 				{ className: "dshEnglishCoach_stack" },
@@ -633,6 +868,32 @@ window.__ModuleLoader__.load({
 									h("span", { className: "dshEnglishCoach_barLabel" }, t(`category.${entry.category}`)),
 									h("span", { className: "dshEnglishCoach_barTrack" }, h("span", { className: "dshEnglishCoach_barFill", style: { width: `${(entry.count / maxCategory) * 100}%` } })),
 									h("span", { className: "dshEnglishCoach_barValue" }, entry.count),
+								),
+							),
+						)
+					: null,
+				patterns.length > 0
+					? h(
+							"section",
+							{ className: "dshEnglishCoach_section" },
+							h("h3", { className: "dshEnglishCoach_sectionTitle" }, t("overview.patterns")),
+							h(
+								"div",
+								{ className: "dshEnglishCoach_patterns" },
+								patterns.map((pattern, index) =>
+									h(
+										"div",
+										{ key: index, className: "dshEnglishCoach_pattern" },
+										h("span", { className: "dshEnglishCoach_chip" }, t(`category.${pattern.category}`)),
+										h("span", { className: "dshEnglishCoach_before" }, pattern.before),
+										h("span", { className: "dshEnglishCoach_arrow" }, "→"),
+										h("span", { className: "dshEnglishCoach_after" }, pattern.after),
+										h(
+											"span",
+											{ className: "dshEnglishCoach_patternCount" },
+											t("overview.patternTimes", { count: pattern.count }),
+										),
+									),
 								),
 							),
 						)
@@ -691,13 +952,15 @@ window.__ModuleLoader__.load({
 		 * @param props - translate.
 		 * @returns the tab.
 		 */
-		function NotebookTab({ t }) {
+		function NotebookTab({ t, onLookup }) {
 			const [query, setQuery] = useState("");
 			const [category, setCategory] = useState("");
+			const [onlyOpen, setOnlyOpen] = useState(false);
 			const [applied, setApplied] = useState({ q: "", category: "" });
 			const [state, reload] = useApi("reviews", {
 				limit: 100,
 				issues: 1,
+				status: onlyOpen ? "open" : undefined,
 				q: applied.q === "" ? undefined : applied.q,
 				category: applied.category === "" ? undefined : applied.category,
 			});
@@ -713,7 +976,7 @@ window.__ModuleLoader__.load({
 					h(
 						"div",
 						{ className: "dshEnglishCoach_list" },
-						(state.data.items ?? []).map((review) => h(ReviewCard, { key: review.id, t, review, onChanged: reload })),
+						(state.data.items ?? []).map((review) => h(ReviewCard, { key: review.id, t, review, onChanged: reload, onLookup })),
 					)
 				);
 			return h(
@@ -732,6 +995,16 @@ window.__ModuleLoader__.load({
 						},
 					}),
 					h("button", { type: "button", className: "dshEnglishCoach_button", onClick: apply }, t("notebook.apply")),
+					h(
+						"button",
+						{
+							type: "button",
+							className: `dshEnglishCoach_chipButton${onlyOpen ? " dshEnglishCoach_chipButtonActive" : ""}`,
+							"aria-pressed": onlyOpen,
+							onClick: () => setOnlyOpen((value) => !value),
+						},
+						t("notebook.onlyOpen"),
+					),
 				),
 				h(
 					"div",
@@ -807,28 +1080,33 @@ window.__ModuleLoader__.load({
 		 * @param props - translate.
 		 * @returns the tab.
 		 */
-		function WordsTab({ t }) {
+		function WordsTab({ t, request }) {
 			const [term, setTerm] = useState("");
 			const [entry, setEntry] = useState(null);
 			const [busy, setBusy] = useState(false);
 			const [message, setMessage] = useState("");
 			const [saved, reloadSaved] = useApi("words", { limit: 50 });
-			const search = async () => {
-				const value = term.trim();
-				if (value === "" || busy) return;
+			const search = async (value) => {
+				const text = String(value ?? term).trim();
+				if (text === "" || busy) return;
 				setBusy(true);
 				setMessage("");
 				try {
-					const data = await apiGet("lookup", { term: value });
+					const data = await apiGet("lookup", { term: text });
 					setEntry(data.entry);
 					reloadSaved();
 				} catch {
 					setEntry(null);
-					setMessage(t("words.notFound", { term: value }));
+					setMessage(t("words.notFound", { term: text }));
 				} finally {
 					setBusy(false);
 				}
 			};
+			useEffect(() => {
+				if (request === undefined || request.nonce === 0 || request.term === "") return;
+				setTerm(request.term);
+				search(request.term);
+			}, [request?.nonce]);
 			const toggleSaved = async () => {
 				if (entry === null) return;
 				try {
@@ -837,6 +1115,15 @@ window.__ModuleLoader__.load({
 					reloadSaved();
 				} catch {
 					// Keep the card as-is; the next lookup will re-read the stored state.
+				}
+			};
+			const removeSaved = async (value) => {
+				try {
+					await apiPost("words", { term: value, saved: false });
+					setEntry((current) => (current !== null && current.term === value ? { ...current, saved: false } : current));
+					reloadSaved();
+				} catch {
+					// The next read shows the stored truth.
 				}
 			};
 			const savedItems = saved.status === "ready" ? saved.data.items ?? [] : [];
@@ -855,10 +1142,10 @@ window.__ModuleLoader__.load({
 							value: term,
 							onChange: (event) => setTerm(event.target.value),
 							onKeyDown: (event) => {
-								if (event.key === "Enter") search();
+								if (event.key === "Enter") search(term);
 							},
 						}),
-						h("button", { type: "button", className: "dshEnglishCoach_button", disabled: busy, onClick: search }, busy ? t("words.searching") : t("words.button")),
+						h("button", { type: "button", className: "dshEnglishCoach_button", disabled: busy, onClick: () => search(term) }, busy ? t("words.searching") : t("words.button")),
 					),
 					message !== "" ? h("div", { className: "dshEnglishCoach_empty" }, message) : null,
 					entry !== null ? h(WordCard, { t, entry, onToggleSaved: toggleSaved }) : null,
@@ -876,9 +1163,22 @@ window.__ModuleLoader__.load({
 									h(
 										"div",
 										{ key: item.term, className: "dshEnglishCoach_savedItem" },
-										h("span", { className: "dshEnglishCoach_savedTerm" }, item.term),
+										h(
+											"button",
+											{
+												type: "button",
+												className: "dshEnglishCoach_savedTermButton",
+												title: t("words.lookUp"),
+												onClick: () => {
+													setTerm(item.term);
+													search(item.term);
+												},
+											},
+											item.term,
+										),
 										item.phonetic ? h("span", { className: "dshEnglishCoach_savedZh" }, item.phonetic) : null,
 										h("span", { className: "dshEnglishCoach_savedZh" }, item.zh ?? ""),
+										h("button", { type: "button", className: "dshEnglishCoach_link", onClick: () => removeSaved(item.term) }, t("words.remove")),
 									),
 								),
 							),
@@ -1022,6 +1322,17 @@ window.__ModuleLoader__.load({
 		 */
 		function CoachPanel({ t }) {
 			const [tab, setTab] = useState("overview");
+			const [lookup, setLookup] = useState({ term: "", nonce: 0 });
+			const bus = usePanelBus();
+			useEffect(() => {
+				if (bus.tab === "") return;
+				const nextTab = bus.tab;
+				const term = bus.term;
+				bus.tab = "";
+				bus.term = "";
+				if (term !== "") setLookup({ term, nonce: bus.nonce });
+				setTab(nextTab);
+			}, [bus.nonce]);
 			return h(
 				"div",
 				{ className: "dshEnglishCoach_page" },
@@ -1030,23 +1341,27 @@ window.__ModuleLoader__.load({
 					{ className: "dshEnglishCoach_header" },
 					h(
 						"div",
-						{ className: "dshEnglishCoach_heading" },
-						h("div", { className: "dshEnglishCoach_title" }, t("panel.title")),
-						h("div", { className: "dshEnglishCoach_subtitle" }, t("panel.subtitle")),
-					),
-					h(
-						"nav",
-						{ className: "dshEnglishCoach_tabs" },
-						TABS.map(([id, label]) =>
-							h(
-								"button",
-								{
-									key: id,
-									type: "button",
-									className: `dshEnglishCoach_tab${tab === id ? " dshEnglishCoach_tabActive" : ""}`,
-									onClick: () => setTab(id),
-								},
-								t(label),
+						{ className: "dshEnglishCoach_headerInner" },
+						h(
+							"div",
+							{ className: "dshEnglishCoach_heading" },
+							h("div", { className: "dshEnglishCoach_title" }, t("panel.title")),
+							h("div", { className: "dshEnglishCoach_subtitle" }, t("panel.subtitle")),
+						),
+						h(
+							"nav",
+							{ className: "dshEnglishCoach_tabs" },
+							TABS.map(([id, label]) =>
+								h(
+									"button",
+									{
+										key: id,
+										type: "button",
+										className: `dshEnglishCoach_tab${tab === id ? " dshEnglishCoach_tabActive" : ""}`,
+										onClick: () => setTab(id),
+									},
+									t(label),
+								),
 							),
 						),
 					),
@@ -1054,13 +1369,17 @@ window.__ModuleLoader__.load({
 				h(
 					"div",
 					{ className: "dshEnglishCoach_body" },
-					tab === "overview"
-						? h(OverviewTab, { t })
-						: tab === "notebook"
-							? h(NotebookTab, { t })
-							: tab === "words"
-								? h(WordsTab, { t })
-								: h(SettingsTab, { t }),
+					h(
+						"div",
+						{ className: "dshEnglishCoach_column" },
+						tab === "overview"
+							? h(OverviewTab, { t })
+							: tab === "notebook"
+								? h(NotebookTab, { t, onLookup: requestLookup })
+								: tab === "words"
+									? h(WordsTab, { t, request: lookup })
+									: h(SettingsTab, { t }),
+					),
 				),
 			);
 		}
@@ -1144,7 +1463,7 @@ window.__ModuleLoader__.load({
 						{ className: "dshEnglishCoach_dockRow" },
 						h("span", { className: "dshEnglishCoach_dockIcon" }, issues.length > 0 ? h(CoachIcon, { size: 14 }) : h(CheckIcon)),
 						h("span", { className: "dshEnglishCoach_dockScope" }, t("dock.scope")),
-						h("span", { className: "dshEnglishCoach_dockSummary" }, issues.length > 0 ? t("dock.issues", { count: issues.length }) : t("dock.clean")),
+						h("span", { className: "dshEnglishCoach_dockSummary" }, issues.length === 0 ? t("dock.clean") : issues.length === 1 ? t("dock.issueOne") : t("dock.issues", { count: issues.length })),
 						categories !== "" ? h("span", { className: "dshEnglishCoach_dockCats" }, categories) : null,
 						h("span", { className: "dshEnglishCoach_dockSpacer" }),
 						issues.length > 0
@@ -1154,14 +1473,33 @@ window.__ModuleLoader__.load({
 									t(open ? "dock.collapse" : "dock.expand"),
 								)
 							: null,
-						h("button", { type: "button", className: "dshEnglishCoach_dockButton", onClick: openPanel }, t("dock.open")),
-						h("button", { type: "button", className: "dshEnglishCoach_dockButton", onClick: () => setHidden(review.id) }, t("dock.dismiss")),
+						h("button", { type: "button", className: "dshEnglishCoach_dockButton", onClick: () => openPanel("notebook") }, t("dock.open")),
+						h("button", {
+							type: "button",
+							className: "dshEnglishCoach_dockButton",
+							onClick: async () => {
+								setHidden(review.id);
+								try {
+									await apiPost("hide", { reviewId: review.id });
+								} catch {
+									// The local hide still takes effect; a remount reads the stored flag.
+								}
+							},
+						}, t("dock.dismiss")),
 					),
 					open && issues.length > 0
 						? h(
 								"div",
 								{ className: "dshEnglishCoach_dockBody" },
-								h("div", { className: "dshEnglishCoach_dockOriginal", title: review.text }, review.text),
+								h("div", { className: "dshEnglishCoach_dockOriginal", title: review.text },
+									h(WordText, {
+										text: review.text,
+										onLookup: (term) => {
+											requestLookup(term);
+											openPanel();
+										},
+									}),
+								),
 								issues.map((issue, index) =>
 									h(
 										"div",
@@ -1201,7 +1539,8 @@ window.__ModuleLoader__.load({
 				return () => tag.remove();
 			}, "english-coach: styles");
 
-			const openPanel = () => {
+			const openPanel = (tab) => {
+				if (typeof tab === "string") requestTab(tab);
 				try {
 					ctx.layout.selectPanel(PANEL_ID);
 				} catch (error) {
