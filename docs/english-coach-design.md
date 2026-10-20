@@ -1,6 +1,6 @@
 # 英语教练（dsh-english-coach）设计稿
 
-> 状态：P0 已实现，代码在 [`dsh-english-coach/`](../dsh-english-coach/)；P1/P2 未做。
+> 状态：P0、P1 与方案 C（双语对照 + 逐词证据）已实现，代码在 [`dsh-english-coach/`](../dsh-english-coach/)；练习/多语言/SSE 未做。
 > 目标读者：本仓库的插件作者（你）。
 
 ## 0. 一句话
@@ -367,4 +367,8 @@ type Issue = {
 4. 词典源：免费词典 API → 内置 `ctx.translator` → 模型兜底（实测前两层不可达时第三层可用）。
 5. 先只做英语，检测、prompt、分类都留了 `languages` 口子。
 
-P1 再讨论：错题卡片里点词查词、`dictionary_lookup` / `english_review` 工具、每会话暂停、SSE 实时、用错句生成练习。
+P1 已实现：点词查词、`dictionary_lookup` / `english_review` 工具、每会话暂停（`/english pause`）、反复出现模式、只看未掌握、生词本点击/移除、忽略两次后自动抑制。
+
+方案 C 已实现：`POST /explain` 一次模型调用返回原文/修正句翻译 + 逐词中文释义（缓存 30 天），每条 issue 旁边显示确定的分类规则；错题本卡片上的「双语对照」按需展开。词典全文仍由点词触发。
+
+P2 再讨论：用错句生成练习、间隔重复、SSE 实时、多语言、可换词典源、发音。

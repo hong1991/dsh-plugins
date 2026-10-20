@@ -19,7 +19,9 @@ appears:
 ```
 
 Expand it for the individual fixes and a one-sentence explanation each. Dismiss
-a review you do not want to see; open the notebook from the same row.
+a review you do not want to see — the dismissal is stored on the Host, so it
+survives switching sessions and reloading — or open the notebook from the same
+row.
 
 The strip always describes the **newest prompt**: it is labelled `你的上一条：`
 and shows the original sentence when expanded. Once a newer message exists, the
@@ -31,15 +33,24 @@ coach never reviews them.
 **A coach page in the sidebar.** The pencil icon opens four tabs:
 
 - **Overview** — reviews, issues, issues per 100 words, word count, issue
-  distribution, the last 8 weeks, and the most recent reviews.
+  distribution, recurring patterns, the last 8 weeks, and the most recent
+  reviews.
 - **Notebook** — every reviewed sentence with its fixes, filterable by category
-  and searchable. Mark an issue as mastered or dismiss a false positive.
+  and searchable, with an "unmastered only" toggle. Mark an issue as mastered or
+  dismiss a false positive. **Click any English word** in the original or the
+  suggestion to look it up; the page switches to the dictionary tab. A
+  **双语对照** button translates the original and the corrected sentence side by
+  side and lists a Chinese gloss for every content word; the rule behind each
+  correction appears inline.
 - **Dictionary** — look up a word or phrase, then keep it in the wordbook.
+  Wordbook entries can be clicked to re-open and removed.
 - **Settings** — automatic review on/off, quiet mode, level, review model,
   minimum words, explanation language, and export.
 
 **Commands.** `/word <term>` looks a word up from the keyboard. `/english`
-prints a short report; `/english on|off` toggles automatic review.
+prints a short report; `/english pause` / `resume` toggles review for the current
+session only; `/english status` shows both; `/english on|off` toggles the
+profile-wide switch.
 
 ## How it works
 
@@ -55,6 +66,16 @@ exact substring of the original is dropped, categories must be known, at most
 five issues survive, and a clean sentence becomes a `clean` review. A reply that
 is not JSON is retried once with a stricter instruction; a second failure is
 logged and dropped, never surfaced as a turn error.
+
+Two things keep false positives from coming back: dismissing an issue marks it,
+and the same `(category, before, after)` pattern dismissed twice is filtered out
+of every later review automatically.
+
+Two model-facing tools are registered as well: `dictionary_lookup` and
+`english_review`. They are **model-invoked**, so their call and result appear in
+the transcript — unlike the background review, which never touches the session
+log. Use them when you explicitly ask the agent to look a word up or check a
+sentence.
 
 Reviews and words live in `$DSH_HOME/english-coach/state.json`, written with a
 temp-file rename. The model is never told about them.
@@ -73,6 +94,8 @@ three seconds while the page is visible.
 | `GET .../stats?weeks=8` | the overview |
 | `GET .../lookup?term=` | the dictionary |
 | `POST .../review` | review arbitrary text: `{ text, sessionId?, store? }` |
+| `POST .../explain` | bilingual view for one review: translation, word glosses, rules |
+| `POST .../hide` | dismiss (or restore) one review's composer strip |
 | `POST .../issues` | dismiss / master / restore one issue |
 | `POST .../words` | save or unsave a word |
 | `POST .../prefs` | save preferences |
